@@ -37,7 +37,13 @@ const ai = new GoogleGenAI({
 });
 
 const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const TIMEOUT_MS = 15000; // 15 second timeout limit
+// Backup model(s) used when the main model is overloaded (503) or out of quota (429).
+// Comma-separated list in GEMINI_FALLBACK_MODELS, e.g. "gemini-3.6-flash".
+const FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || 'gemini-3.6-flash')
+  .split(',').map((m) => m.trim()).filter(Boolean);
+const MODELS = [MODEL_NAME, ...FALLBACK_MODELS.filter((m) => m !== MODEL_NAME)];
+const TIMEOUT_MS = 12000;        // limit for each single attempt
+const TOTAL_BUDGET_MS = 20000;   // no new attempt starts after this much total time
 
 /**
  * Clean and validate structured AI response against allowed enums
@@ -117,7 +123,7 @@ function createFallbackResponse(title, description, citizenCategory, hasImage, r
 /**
  * Execute single generation request to Gemini with timeout
  */
-async function callGeminiOnce(title, description, location, citizenCategory, imageBase64) {
+async function callGeminiOnce(model, title, description, location, citizenCategory, imageBase64) {
   const parts = [];
   const hasImage = Boolean(imageBase64);
 
@@ -165,12 +171,13 @@ Rules:
   parts.push({ text: promptText });
 
   // Call Gemini using official @google/genai SDK with responseSchema
-  const timeoutPromise = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Gemini API call timed out')), TIMEOUT_MS)
-  );
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Gemini API call timed out')), TIMEOUT_MS);
+  });
 
   const requestPromise = ai.models.generateContent({
-    model: MODEL_NAME,
+    model,
     contents: parts,
     config: {
       // Low thinking = much faster answers (3.8 Flash does not support 'minimal')
@@ -220,7 +227,12 @@ Rules:
     }
   });
 
-  const response = await Promise.race([requestPromise, timeoutPromise]);
+  let response;
+  try {
+    response = await Promise.race([requestPromise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
   const text = response.text;
   if (!text) {
     throw new Error('Empty response from Gemini');
@@ -231,33 +243,33 @@ Rules:
 }
 
 /**
- * Analyze a complaint with 1 automatic retry and graceful fallback
+ * Analyze a complaint. If the main model is overloaded (503), out of quota (429) or slow,
+ * the backup model is tried, then the main model once more. If everything fails, a safe
+ * fallback is returned so a complaint is NEVER lost or blocked.
  * @param {Object} complaintData - { title, description, location, category, image }
  * @returns {Promise<Object>} - Structured AI analysis object
  */
 async function analyzeComplaint({ title, description, location, category, image }) {
   const hasImage = Boolean(image);
+  const started = Date.now();
+  const attempts = [...MODELS, MODELS[0]];
 
-  // Attempt 1
-  try {
-    return await callGeminiOnce(title, description, location, category, image);
-  } catch (err1) {
-    // Quota exhausted or timed out: retrying cannot help and only makes the citizen wait longer
-    const msg = String(err1.message || err1);
-    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('timed out')) {
-      return createFallbackResponse(title, description, category, hasImage);
-    }
-
-    // Attempt 2 (Retry once with short delay)
+  for (let i = 0; i < attempts.length; i++) {
+    if (Date.now() - started > TOTAL_BUDGET_MS) break;
     try {
-      await new Promise((res) => setTimeout(res, 1200));
-      return await callGeminiOnce(title, description, location, category, image);
-    } catch (err2) {
-      console.warn('[Gemini AI Attempt 2 Failed]:', err2.message || err2);
-      // Graceful fallback: submission NEVER blocks
-      return createFallbackResponse(title, description, category, hasImage);
+      return await callGeminiOnce(attempts[i], title, description, location, category, image);
+    } catch (err) {
+      const msg = String(err.message || err);
+      // Log the real reason (never the key) so the cause is visible in the server logs
+      console.warn(`[Gemini attempt ${i + 1} failed on ${attempts[i]}]:`, msg.slice(0, 200));
+      // A bad key will not be fixed by another model
+      if (/API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(msg)) break;
+      await new Promise((res) => setTimeout(res, 600));
     }
   }
+
+  // Graceful fallback: submission NEVER blocks
+  return createFallbackResponse(title, description, category, hasImage);
 }
 
 module.exports = {
