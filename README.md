@@ -265,4 +265,4 @@ Duplicate-report grouping, a map view of all issues, SMS or WhatsApp status upda
 
 ---
 
-*Built for the CivicResolve hackathon challenge by **[your name / team name]**.*
+*Built for the CivicResolve hackathon challenge by **Tusyaa Bala Ganash K**.*
