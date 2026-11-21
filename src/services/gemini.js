@@ -37,7 +37,7 @@ const ai = new GoogleGenAI({
 });
 
 const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-const TIMEOUT_MS = 20000; // 20 second timeout limit
+const TIMEOUT_MS = 15000; // 15 second timeout limit
 
 /**
  * Clean and validate structured AI response against allowed enums
@@ -159,6 +159,7 @@ Rules:
 7. Image Matches: if photo attached, return "yes" if the photo visually shows the described civic issue, or "no" if irrelevant. If no photo, return "no_image".
 8. Citizen Message: a warm, polite 1-2 sentence reassurance written IN THE CITIZEN'S OWN LANGUAGE (matching the detected input language), informing them which category, priority level, and department their complaint has been assigned to.
 9. Category Mismatch: Return true if the citizen picked a category and your analysis determined a different category. Otherwise false.
+10. Citizens often misspell words or write in a hurry (for example "pathole", "pathone", "garbadge"). Interpret the intended meaning, and if a photo is attached, use it to help decide the category.
 `.trim();
 
   parts.push({ text: promptText });
@@ -172,6 +173,8 @@ Rules:
     model: MODEL_NAME,
     contents: parts,
     config: {
+      // Low thinking = much faster answers (3.8 Flash does not support 'minimal')
+      thinkingConfig: { thinkingLevel: 'low' },
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
@@ -239,9 +242,9 @@ async function analyzeComplaint({ title, description, location, category, image 
   try {
     return await callGeminiOnce(title, description, location, category, image);
   } catch (err1) {
-        // Quota exhausted: retrying cannot help and burns another request
+    // Quota exhausted or timed out: retrying cannot help and only makes the citizen wait longer
     const msg = String(err1.message || err1);
-    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('timed out')) {
       return createFallbackResponse(title, description, category, hasImage);
     }
 

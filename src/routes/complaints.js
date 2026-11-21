@@ -5,7 +5,7 @@
 
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { getClient, query } = require('../db/pool');
+const { query } = require('../db/pool');
 const { savePhoto } = require('../services/photoStorage');
 const { generateTrackingId } = require('../utils/trackingId');
 const { analyzeComplaint } = require('../services/gemini');
@@ -28,8 +28,8 @@ const submissionLimiter = rateLimit({
  * Submit a new civic complaint with Gemini AI analysis
  */
 router.post('/', submissionLimiter, async (req, res, next) => {
-  const client = await getClient();
   try {
+    const tStart = Date.now();
     const {
       title,
       description,
@@ -71,9 +71,7 @@ router.post('/', submissionLimiter, async (req, res, next) => {
       }
     }
 
-    // -------------------------------------------------------------
-    // Gemini AI Analysis (Multimodal, Multilingual, with Retry & Fallback)
-    // -------------------------------------------------------------
+    // Gemini AI analysis (multimodal, multilingual; retry and fallback live inside)
     const aiResult = await analyzeComplaint({
       title: cleanTitle,
       description: cleanDesc,
@@ -81,117 +79,80 @@ router.post('/', submissionLimiter, async (req, res, next) => {
       category: cleanCategory,
       image: storedImageData
     });
+    const tAi = Date.now() - tStart;
 
-    // Begin database transaction
-    await client.query('BEGIN');
-
-    // Generate unique tracking ID
-    let trackingId = generateTrackingId();
-    let collision = true;
-    let attempts = 0;
-
-    while (collision && attempts < 5) {
-      const checkRes = await client.query(
-        'SELECT id FROM complaints WHERE tracking_id = $1 LIMIT 1',
-        [trackingId]
-      );
-      if (checkRes.rows.length === 0) {
-        collision = false;
-      } else {
-        trackingId = generateTrackingId();
-        attempts++;
-      }
-    }
-
-    // Insert complaint with AI fields populated
-    const insertComplaintSql = `
-      INSERT INTO complaints (
-        tracking_id,
-        title,
-        description,
-        english_title,
-        english_description,
-        language,
-        detected_language,
-        input_category,
-        ai_category,
-        category_mismatch,
-        priority,
-        priority_reason,
-        department,
-        english_summary,
-        citizen_message,
-        image_matches,
-        needs_review,
-        location_address,
-        latitude,
-        longitude,
-        image_data,
-        status
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-        $21, 'Reported'
-      )
-      RETURNING *;
-    `;
-
-    const complaintResult = await client.query(insertComplaintSql, [
-      trackingId,
-      cleanTitle,
-      cleanDesc,
-      aiResult.english_title || cleanTitle,
-      aiResult.english_description || cleanDesc,
-      cleanLang,
-      aiResult.detected_language,
-      cleanCategory,
-      aiResult.category,
-      aiResult.category_mismatch,
-      aiResult.priority,
-      aiResult.priority_reason,
-      aiResult.department,
-      aiResult.english_summary,
-      aiResult.citizen_message,
-      aiResult.image_matches,
-      aiResult.needs_review,
-      cleanLocation,
-      lat,
-      lng,
-      storedImageData
-    ]);
-
-    const newComplaint = complaintResult.rows[0];
-
-    // Create initial timeline log with AI summary
     const logNote = aiResult.needs_review
       ? 'Complaint submitted by citizen. Automated AI analysis unavailable; flagged for manual authority review.'
       : `Complaint submitted. AI Analysis: [${aiResult.category}] | Priority: [${aiResult.priority}] | Department: [${aiResult.department}]`;
 
-    const insertLogSql = `
-      INSERT INTO complaint_logs (
-        complaint_id,
-        status,
-        note
-      ) VALUES ($1, 'Reported', $2);
+    // ONE statement saves the complaint AND its first timeline entry (all-or-nothing),
+    // so only a single trip to the database is needed.
+    const insertSql = `
+      WITH c AS (
+        INSERT INTO complaints (
+          tracking_id, title, description, english_title, english_description,
+          language, detected_language, input_category, ai_category, category_mismatch,
+          priority, priority_reason, department, english_summary, citizen_message,
+          image_matches, needs_review, location_address, latitude, longitude, image_data, status
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, 'Reported'
+        )
+        RETURNING id, tracking_id, status, created_at
+      ), l AS (
+        INSERT INTO complaint_logs (complaint_id, status, note)
+        SELECT id, 'Reported', $22::text FROM c
+      )
+      SELECT tracking_id, status, created_at FROM c
     `;
 
-    await client.query(insertLogSql, [newComplaint.id, logNote]);
+    // Retry only if the random tracking ID happens to collide with an existing one
+    let row = null;
+    for (let attempt = 0; attempt < 5 && !row; attempt++) {
+      try {
+        const result = await query(insertSql, [
+          generateTrackingId(),
+          cleanTitle,
+          cleanDesc,
+          aiResult.english_title || cleanTitle,
+          aiResult.english_description || cleanDesc,
+          cleanLang,
+          aiResult.detected_language,
+          cleanCategory,
+          aiResult.category,
+          aiResult.category_mismatch,
+          aiResult.priority,
+          aiResult.priority_reason,
+          aiResult.department,
+          aiResult.english_summary,
+          aiResult.citizen_message,
+          aiResult.image_matches,
+          aiResult.needs_review,
+          cleanLocation,
+          lat,
+          lng,
+          storedImageData,
+          logNote
+        ]);
+        row = result.rows[0];
+      } catch (e) {
+        if (e.code !== '23505') throw e; // only retry on a duplicate tracking ID
+      }
+    }
+    if (!row) throw new Error('Could not generate a unique tracking ID');
 
-    await client.query('COMMIT');
+    console.log(`[timing] ai ${tAi} ms (${aiResult.needs_review ? 'FALLBACK' : 'AI OK'}), total ${Date.now() - tStart} ms`);
 
     return res.status(201).json({
       success: true,
-      tracking_id: newComplaint.tracking_id,
-      status: newComplaint.status,
-      created_at: newComplaint.created_at,
+      tracking_id: row.tracking_id,
+      status: row.status,
+      created_at: row.created_at,
       ai_analysis: aiResult
     });
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('[Complaint Submission Error]:', err.message);
     next(err);
-  } finally {
-    client.release();
   }
 });
 
