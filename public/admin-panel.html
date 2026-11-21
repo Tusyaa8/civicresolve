@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CivicResolve Admin</title>
+<style>
+  :root { --bg:#f4f6f9; --card:#fff; --ink:#1c2430; --mute:#5c6877; --line:#dde3ea; --brand:#0b5fff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Noto Sans", sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:var(--brand); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .brand { font-weight:700; font-size:18px; }
+  .hactions { display:flex; gap:8px; }
+  .hbtn { display:inline-flex; align-items:center; padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,.7); background:transparent; color:#fff; font:inherit; font-size:14px; text-decoration:none; cursor:pointer; }
+  .hbtn:hover { background:rgba(255,255,255,.15); }
+  .hbtn:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+  .stat b { display:block; font-size:26px; }
+  .bars div { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:14px; }
+  .bars span.l { width:110px; }
+  .bars i { display:block; height:12px; background:var(--brand); border-radius:6px; min-width:2px; }
+  .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; }
+  input, select, textarea, button { font:inherit; padding:9px; border-radius:8px; border:1px solid var(--line); }
+  button.primary { background:var(--brand); color:#fff; border-color:var(--brand); cursor:pointer; }
+  .tablewrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.row { cursor:pointer; } tr.row:hover { background:#eef3ff; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:12px; color:#fff; }
+  .Critical{background:#c62828}.High{background:#ef6c00}.Medium{background:#f9a825;color:#222}.Low{background:#2e7d32}
+  .tag { background:#fff3cd; color:#664d03; padding:2px 6px; border-radius:6px; font-size:12px; }
+  #overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:16px; }
+  #panel { background:#fff; border-radius:12px; max-width:720px; width:100%; padding:16px; }
+  #panel img { max-width:100%; border-radius:8px; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; }
+  .muted { color:var(--mute); font-size:13px; }
+  #login { max-width:340px; margin:80px auto; }
+  #err { color:#c62828; min-height:20px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">CivicResolve Admin</span>
+  <span class="hactions">
+    <a class="hbtn" href="/">View public site</a>
+    <button id="logout" class="hbtn" hidden>Log out</button>
+  </span>
+</header>
+
+<main>
+  <section id="login" class="card" hidden>
+    <h2>Admin login</h2>
+    <p><input id="pw" type="password" placeholder="Password" autocomplete="current-password" style="width:100%"></p>
+    <p id="err"></p>
+    <button id="loginBtn" class="primary" style="width:100%">Log in</button>
+  </section>
+
+  <section id="app" hidden>
+    <div class="card"><div class="stats" id="stats"></div></div>
+    <div class="grid2">
+      <div class="card"><b>By category</b><div class="bars" id="catBars"></div></div>
+      <div class="card"><b>By priority</b><div class="bars" id="priBars"></div></div>
+    </div>
+
+    <div class="card filters">
+      <input id="q" placeholder="Search ID, title, place">
+      <select id="fStatus"></select><select id="fPriority"></select>
+      <select id="fCategory"></select><select id="fDept"></select>
+    </div>
+
+    <div class="card tablewrap">
+      <table>
+        <thead><tr><th>ID</th><th>Summary</th><th>Category</th><th>Department</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p id="empty" class="muted" hidden>No complaints match.</p>
+    </div>
+  </section>
+</main>
+
+<div id="overlay"><div id="panel"></div></div>
+
+<script>
+const STATUSES = ['Reported','In Progress','Resolved'];
+const PRIORITIES = ['Critical','High','Medium','Low'];
+const CATEGORIES = ['pothole','garbage','streetlight','water_leakage','road_damage','drainage','other'];
+const DEPARTMENTS = ['Roads','Sanitation','Electricity','Water Supply','Drainage','General'];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opts = (list, sel) => list.map(v => `<option ${v === sel ? 'selected' : ''}>${esc(v)}</option>`).join('');
+const fmt = d => d ? new Date(d).toLocaleString() : '';
+
+async function api(path, options = {}) {
+  const res = await fetch(path, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...options });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && !path.endsWith('/login')) { showLogin(); throw new Error('Please log in'); }
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function showLogin() { $('#login').hidden = false; $('#app').hidden = true; $('#logout').hidden = true; }
+function showApp() { $('#login').hidden = true; $('#app').hidden = false; $('#logout').hidden = false; }
+
+function fillFilter(sel, label, list) {
+  $(sel).innerHTML = `<option value="">${label}</option>` + list.map(v => `<option>${esc(v)}</option>`).join('');
+}
+
+async function loadStats() {
+  const s = await api('/api/issues/stats');
+  $('#stats').innerHTML = [
+    ['Total', s.total], ['Reported', s.byStatus.Reported], ['In Progress', s.byStatus['In Progress']],
+    ['Resolved', s.byStatus.Resolved], ['Resolution rate', s.resolutionRate + '%']
+  ].map(([k, v]) => `<div class="stat"><b>${esc(v)}</b><span class="muted">${esc(k)}</span></div>`).join('');
+  const bars = (obj) => {
+    const max = Math.max(1, ...Object.values(obj));
+    return Object.entries(obj).map(([k, n]) =>
+      `<div><span class="l">${esc(k)}</span><i style="width:${(n / max) * 100}%"></i><span>${n}</span></div>`).join('') || '<span class="muted">No data</span>';
+  };
+  $('#catBars').innerHTML = bars(s.byCategory);
+  $('#priBars').innerHTML = bars(s.byPriority);
+}
+
+async function loadList() {
+  const p = new URLSearchParams();
+  [['q', '#q'], ['status', '#fStatus'], ['priority', '#fPriority'], ['category', '#fCategory'], ['department', '#fDept']]
+    .forEach(([k, sel]) => { const v = $(sel).value.trim(); if (v) p.set(k, v); });
+  const { complaints } = await api('/api/admin/complaints?' + p.toString());
+  $('#empty').hidden = complaints.length > 0;
+  $('#rows').innerHTML = complaints.map(c => `
+    <tr class="row" data-id="${esc(c.tracking_id)}">
+      <td>${esc(c.tracking_id)}</td>
+      <td>${esc(c.english_summary || c.english_title || c.title)} ${c.needs_review ? '<span class="tag">needs review</span>' : ''}</td>
+      <td>${esc(c.category)}</td><td>${esc(c.department)}</td>
+      <td><span class="badge ${esc(c.priority)}">${esc(c.priority)}</span></td>
+      <td>${esc(c.status)}</td><td>${esc(fmt(c.created_at))}</td>
+    </tr>`).join('');
+}
+
+async function refresh() { await Promise.all([loadStats(), loadList()]); }
+
+async function openDetail(id) {
+  const { complaint: c, timeline } = await api('/api/admin/complaints/' + encodeURIComponent(id));
+  let img = '';
+  if (c.image_data) {
+    const src = c.image_data.startsWith('data:') ? c.image_data : 'data:image/jpeg;base64,' + c.image_data;
+    img = `<p><img alt="Citizen photo" src="${esc(src)}"></p>`;
+  }
+  const map = c.latitude && c.longitude
+    ? `<a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${esc(c.latitude)}&mlon=${esc(c.longitude)}#map=18/${esc(c.latitude)}/${esc(c.longitude)}">Open on map</a>` : '';
+  $('#panel').innerHTML = `
+    <div style="display:flex;justify-content:space-between"><h3 style="margin:0">${esc(c.tracking_id)}</h3><button id="closeP">Close</button></div>
+    <p><b>${esc(c.english_title || c.title)}</b><br><span class="muted">Original: ${esc(c.title)}</span></p>
+    <p>${esc(c.english_description || c.description)}</p>
+    <p class="muted">Original text: ${esc(c.description)}</p>
+    <p>Location: ${esc(c.location_address)} ${map}</p>
+    ${img}
+    <p class="muted">AI reason: ${esc(c.priority_reason || 'Not available')}<br>
+      Citizen chose: ${esc(c.input_category || 'Let AI decide')}${c.category_mismatch ? ' (differs from AI)' : ''}<br>
+      Photo matches description: ${esc(c.image_matches || 'n/a')}${c.needs_review ? '<br><span class="tag">AI analysis unavailable, please review</span>' : ''}</p>
+    <div class="grid2">
+      <label>Status<select id="eStatus">${opts(STATUSES, c.status)}</select></label>
+      <label>Category<select id="eCat">${opts(CATEGORIES, c.ai_category)}</select></label>
+      <label>Priority<select id="ePri">${opts(PRIORITIES, c.priority)}</select></label>
+      <label>Department<select id="eDept">${opts(DEPARTMENTS, c.department)}</select></label>
+    </div>
+    <p><textarea id="eNote" rows="3" style="width:100%" placeholder="Note for the citizen (shown on their tracking page)"></textarea></p>
+    <p id="saveMsg" class="muted"></p>
+    <button id="saveBtn" class="primary">Save changes</button>
+    <h4>Timeline</h4>
+    ${timeline.map(t => `<p class="muted">${esc(fmt(t.created_at))} - <b>${esc(t.status)}</b>: ${esc(t.note || '')}</p>`).join('')}`;
+  $('#overlay').style.display = 'flex';
+  $('#closeP').onclick = closeDetail;
+  $('#saveBtn').onclick = async () => {
+    try {
+      await api('/api/admin/complaints/' + encodeURIComponent(id), {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: $('#eStatus').value, category: $('#eCat').value, priority: $('#ePri').value,
+          department: $('#eDept').value, note: $('#eNote').value
+        })
+      });
+      closeDetail();
+      refresh();
+    } catch (e) { $('#saveMsg').textContent = e.message; }
+  };
+}
+function closeDetail() { $('#overlay').style.display = 'none'; }
+
+$('#rows').addEventListener('click', e => {
+  const tr = e.target.closest('tr.row');
+  if (tr) openDetail(tr.dataset.id).catch(err => alert(err.message));
+});
+$('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay') closeDetail(); });
+
+let timer;
+$('#q').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(loadList, 300); });
+['#fStatus', '#fPriority', '#fCategory', '#fDept'].forEach(s => $(s).addEventListener('change', loadList));
+
+async function doLogin() {
+  $('#err').textContent = '';
+  try {
+    await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password: $('#pw').value }) });
+    $('#pw').value = '';
+    showApp(); refresh();
+  } catch (e) { $('#err').textContent = e.message; }
+}
+$('#loginBtn').onclick = doLogin;
+$('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+$('#logout').onclick = async () => { await api('/api/admin/logout', { method: 'POST' }); showLogin(); };
+
+fillFilter('#fStatus', 'All statuses', STATUSES);
+fillFilter('#fPriority', 'All priorities', PRIORITIES);
+fillFilter('#fCategory', 'All categories', CATEGORIES);
+fillFilter('#fDept', 'All departments', DEPARTMENTS);
+
+(async () => {
+  const s = await fetch('/api/admin/session', { credentials: 'same-origin' }).then(r => r.json()).catch(() => ({}));
+  if (s.authenticated) { showApp(); refresh(); } else showLogin();
+})();
+</script>
+</body>
+</html>

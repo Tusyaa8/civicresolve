@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-page-title="track.page_title">CivicResolve</title>
+
+  <!-- Font support for all 12 languages -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Oriya:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-main-row">
+        <!-- Brand Logo (Start) -->
+        <a href="/" class="brand-link">
+          <div class="brand-icon">CR</div>
+          <div class="brand-text">
+            <div class="brand-title" data-i18n="app_name"></div>
+            <div class="brand-subtitle" data-i18n="app_tagline"></div>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav" aria-label="Main Navigation">
+          <ul class="nav-links">
+            <li><a href="/" class="nav-link" data-i18n="nav.home"></a></li>
+            <li><a href="/report" class="nav-link" data-i18n="nav.report"></a></li>
+            <li><a href="/track" class="nav-link active" data-i18n="nav.track"></a></li>
+            <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+            <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+          </ul>
+        </nav>
+
+        <!-- Actions (End: Hamburger Button + Fixed Compact Language Switcher) -->
+        <div class="header-end-actions">
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+          </button>
+          <div class="lang-switcher-wrapper">
+            <select class="lang-switcher-select" data-i18n-aria="nav.change_language" aria-label="Select Language"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Mobile Navigation Drawer -->
+      <nav class="mobile-nav" id="mobileNav" aria-label="Mobile Navigation">
+        <ul class="mobile-nav-links">
+          <li><a href="/" class="nav-link" data-i18n="nav.home"></a></li>
+          <li><a href="/report" class="nav-link" data-i18n="nav.report"></a></li>
+          <li><a href="/track" class="nav-link active" data-i18n="nav.track"></a></li>
+          <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+          <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <div class="form-card">
+        <div class="page-header">
+          <h1 class="page-title" data-i18n="track.page_title"></h1>
+          <p class="page-subtitle" data-i18n="track.page_subtitle"></p>
+        </div>
+
+        <!-- Lookup Form -->
+        <form id="trackForm" style="margin-bottom: 24px;">
+          <div class="form-group">
+            <label for="trackingIdInput" class="form-label" data-i18n="track.input_label"></label>
+            <div class="input-with-button">
+              <input type="text" id="trackingIdInput" class="form-control" style="font-weight: 700; text-transform: uppercase;"
+                data-i18n-placeholder="track.input_placeholder" autocomplete="off" required>
+              <button type="submit" id="btnTrack" class="btn btn-primary" style="white-space: nowrap;">
+                <span id="trackBtnText" data-i18n="track.btn_search"></span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Result Container -->
+        <div id="trackResultContainer" style="display: none;">
+          <!-- Visual 3-Step Stepper -->
+          <div class="timeline-stepper">
+            <div class="step-node" id="stepReported">
+              <div class="step-circle">1</div>
+              <div class="step-label" data-i18n="statuses.Reported"></div>
+            </div>
+            <div class="step-node" id="stepInProgress">
+              <div class="step-circle">2</div>
+              <div class="step-label" data-i18n="statuses.In Progress"></div>
+            </div>
+            <div class="step-node" id="stepResolved">
+              <div class="step-circle">3</div>
+              <div class="step-label" data-i18n="statuses.Resolved"></div>
+            </div>
+          </div>
+
+          <!-- Issue Details Card -->
+          <div class="step-card" style="text-align: left; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+              <h3 id="resTitle" style="margin-bottom: 4px; font-size: 1.25rem;"></h3>
+              <span id="resTrackingCode" style="font-family: monospace; font-weight: 700; color: var(--primary);"></span>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-block: 12px; flex-wrap: wrap;">
+              <span id="resStatusBadge" class="badge"></span>
+              <span id="resPriorityBadge" class="badge"></span>
+              <span id="resCategoryBadge" class="badge"></span>
+            </div>
+
+            <p id="resDesc" style="color: var(--slate-700); margin-bottom: 14px; line-height: 1.6;"></p>
+
+            <div style="background-color: var(--white); border-radius: var(--radius-sm); padding: 12px 14px; border: 1px solid var(--slate-200); margin-bottom: 12px; font-size: 0.92rem;">
+              <strong data-i18n="track.assigned_dept"></strong>: <span id="resDepartment"></span>
+            </div>
+
+            <div style="background-color: var(--white); border-radius: var(--radius-sm); padding: 12px 14px; border: 1px solid var(--slate-200); margin-bottom: 12px; font-size: 0.92rem;">
+              <strong data-i18n="issues.location"></strong>: <span id="resLocation"></span>
+            </div>
+
+            <div id="citizenMessageCard" style="display: none; background-color: var(--primary-light); border-left: 4px solid var(--primary); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 12px;">
+              <strong data-i18n="track.citizen_note_title"></strong>
+              <p id="resCitizenMessage" style="margin-top: 4px; font-size: 0.95rem;"></p>
+            </div>
+
+            <div id="adminNotesCard" style="display: none; background-color: var(--warning-light); border-left: 4px solid var(--warning); padding: 12px; border-radius: var(--radius-sm);">
+              <strong data-i18n="track.admin_notes_title"></strong>
+              <p id="resAdminNotes" style="margin-top: 4px; font-size: 0.95rem;"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 404 / Error Alert -->
+        <div id="trackNotFound" class="alert alert-danger" style="display: none;">
+          <span data-i18n="track.not_found"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.about"></p>
+      <p data-i18n="footer.built_with"></p>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+  <script>
+    const trackForm = document.getElementById('trackForm');
+    const trackingIdInput = document.getElementById('trackingIdInput');
+    const btnTrack = document.getElementById('btnTrack');
+    const trackBtnText = document.getElementById('trackBtnText');
+    const trackResultContainer = document.getElementById('trackResultContainer');
+    const trackNotFound = document.getElementById('trackNotFound');
+
+    const stepReported = document.getElementById('stepReported');
+    const stepInProgress = document.getElementById('stepInProgress');
+    const stepResolved = document.getElementById('stepResolved');
+
+    const resTitle = document.getElementById('resTitle');
+    const resTrackingCode = document.getElementById('resTrackingCode');
+    const resStatusBadge = document.getElementById('resStatusBadge');
+    const resPriorityBadge = document.getElementById('resPriorityBadge');
+    const resCategoryBadge = document.getElementById('resCategoryBadge');
+    const resDesc = document.getElementById('resDesc');
+    const resDepartment = document.getElementById('resDepartment');
+    const resLocation = document.getElementById('resLocation');
+    const citizenMessageCard = document.getElementById('citizenMessageCard');
+    const resCitizenMessage = document.getElementById('resCitizenMessage');
+    const adminNotesCard = document.getElementById('adminNotesCard');
+    const resAdminNotes = document.getElementById('resAdminNotes');
+
+    async function checkComplaintStatus(trackingId) {
+      if (!trackingId) return;
+
+      trackNotFound.style.display = 'none';
+      trackResultContainer.style.display = 'none';
+      btnTrack.disabled = true;
+      trackBtnText.textContent = window.t('track.searching');
+
+      try {
+        const res = await fetch(`/api/complaints/${encodeURIComponent(trackingId.trim().toUpperCase())}`);
+        if (!res.ok) {
+          throw new Error('Not found');
+        }
+
+        const data = await res.json();
+        const c = data.complaint;
+
+        // Populate fields
+        resTitle.textContent = c.title;
+        resTrackingCode.textContent = c.tracking_id;
+        resDesc.textContent = c.description;
+        resLocation.textContent = c.location_address || '—';
+
+        // Department
+        resDepartment.textContent = window.t(`departments.${c.department}`) || c.department || window.t('departments.General');
+
+        // Status badge
+        resStatusBadge.textContent = window.t(`statuses.${c.status}`) || c.status;
+        resStatusBadge.className = 'badge';
+        if (c.status === 'Resolved') {
+          resStatusBadge.classList.add('badge-status-resolved');
+        } else if (c.status === 'In Progress') {
+          resStatusBadge.classList.add('badge-status-inprogress');
+        } else {
+          resStatusBadge.classList.add('badge-status-reported');
+        }
+
+        // Priority badge
+        resPriorityBadge.textContent = window.t(`priorities.${c.priority}`) || c.priority;
+        resPriorityBadge.className = 'badge';
+        if (c.priority === 'Critical') {
+          resPriorityBadge.classList.add('badge-priority-critical');
+        } else if (c.priority === 'High') {
+          resPriorityBadge.classList.add('badge-priority-high');
+        } else if (c.priority === 'Low') {
+          resPriorityBadge.classList.add('badge-priority-low');
+        } else {
+          resPriorityBadge.classList.add('badge-priority-medium');
+        }
+
+        // Category badge
+        resCategoryBadge.textContent = window.t(`categories.${c.category}`) || c.category;
+        resCategoryBadge.className = 'badge badge-priority-low';
+
+        // Stepper state
+        stepReported.className = 'step-node';
+        stepInProgress.className = 'step-node';
+        stepResolved.className = 'step-node';
+
+        if (c.status === 'Resolved') {
+          stepReported.classList.add('completed');
+          stepInProgress.classList.add('completed');
+          stepResolved.classList.add('completed');
+        } else if (c.status === 'In Progress') {
+          stepReported.classList.add('completed');
+          stepInProgress.classList.add('active');
+        } else {
+          stepReported.classList.add('active');
+        }
+
+        // Citizen message
+        if (c.citizen_message) {
+          resCitizenMessage.textContent = c.citizen_message;
+          citizenMessageCard.style.display = 'block';
+        } else {
+          citizenMessageCard.style.display = 'none';
+        }
+
+        // Admin notes
+        if (c.admin_notes) {
+          resAdminNotes.textContent = c.admin_notes;
+          adminNotesCard.style.display = 'block';
+        } else {
+          adminNotesCard.style.display = 'none';
+        }
+
+        trackResultContainer.style.display = 'block';
+        trackResultContainer.scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        trackNotFound.style.display = 'block';
+      } finally {
+        btnTrack.disabled = false;
+        trackBtnText.textContent = window.t('track.btn_search');
+      }
+    }
+
+    trackForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const code = trackingIdInput.value.trim();
+      if (code) {
+        checkComplaintStatus(code);
+      }
+    });
+
+    // Auto-check if ?id= is present in URL
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryId = urlParams.get('id');
+      if (queryId) {
+        trackingIdInput.value = queryId;
+        checkComplaintStatus(queryId);
+      }
+    });
+
+    // Re-render status texts if language changed while on track page
+    window.addEventListener('civicresolve:langchange', () => {
+      const code = trackingIdInput.value.trim();
+      if (code && trackResultContainer.style.display !== 'none') {
+        checkComplaintStatus(code);
+      }
+    });
+  </script>
+</body>
+</html>

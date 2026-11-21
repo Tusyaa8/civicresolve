@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-page-title="nav.home">CivicResolve</title>
+  
+  <!-- Font support for all 12 languages -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Oriya:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-main-row">
+        <!-- Brand Logo (Start) -->
+        <a href="/" class="brand-link">
+          <div class="brand-icon">CR</div>
+          <div class="brand-text">
+            <div class="brand-title" data-i18n="app_name"></div>
+            <div class="brand-subtitle" data-i18n="app_tagline"></div>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation (Allowed to shrink, wraps internally if needed) -->
+        <nav class="desktop-nav" aria-label="Main Navigation">
+          <ul class="nav-links">
+            <li><a href="/" class="nav-link active" data-i18n="nav.home"></a></li>
+            <li><a href="/report" class="nav-link" data-i18n="nav.report"></a></li>
+            <li><a href="/track" class="nav-link" data-i18n="nav.track"></a></li>
+            <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+            <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+          </ul>
+        </nav>
+
+        <!-- Actions (End: Hamburger Button + Fixed Compact Language Switcher) -->
+        <div class="header-end-actions">
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+          </button>
+          <div class="lang-switcher-wrapper">
+            <select class="lang-switcher-select" data-i18n-aria="nav.change_language" aria-label="Select Language"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Mobile Navigation Drawer -->
+      <nav class="mobile-nav" id="mobileNav" aria-label="Mobile Navigation">
+        <ul class="mobile-nav-links">
+          <li><a href="/" class="nav-link active" data-i18n="nav.home"></a></li>
+          <li><a href="/report" class="nav-link" data-i18n="nav.report"></a></li>
+          <li><a href="/track" class="nav-link" data-i18n="nav.track"></a></li>
+          <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+          <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <h1 class="hero-title" data-i18n="home.hero_title"></h1>
+        <p class="hero-subtitle" data-i18n="home.hero_subtitle"></p>
+
+        <!-- Big Touch-friendly CTA Buttons -->
+        <div class="cta-group">
+          <a href="/report" class="btn btn-primary" data-i18n="home.cta_report"></a>
+          <a href="/track" class="btn btn-secondary" data-i18n="home.cta_track"></a>
+          <a href="/issues" class="btn btn-outline" data-i18n="home.cta_browse"></a>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section class="features-container">
+        <h2 class="section-heading" data-i18n="home.features_title"></h2>
+        <div class="steps-grid">
+          <div class="step-card">
+            <h3 data-i18n="home.step1_title"></h3>
+            <p data-i18n="home.step1_desc"></p>
+          </div>
+          <div class="step-card">
+            <h3 data-i18n="home.step2_title"></h3>
+            <p data-i18n="home.step2_desc"></p>
+          </div>
+          <div class="step-card">
+            <h3 data-i18n="home.step3_title"></h3>
+            <p data-i18n="home.step3_desc"></p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.about"></p>
+      <p data-i18n="footer.built_with"></p>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+</body>
+</html>

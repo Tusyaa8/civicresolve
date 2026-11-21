@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-page-title="report.page_title">CivicResolve</title>
+
+  <!-- Font support for all 12 languages -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&family=Noto+Sans+Malayalam:wght@400;600;700&family=Noto+Sans+Oriya:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-main-row">
+        <!-- Brand Logo (Start) -->
+        <a href="/" class="brand-link">
+          <div class="brand-icon">CR</div>
+          <div class="brand-text">
+            <div class="brand-title" data-i18n="app_name"></div>
+            <div class="brand-subtitle" data-i18n="app_tagline"></div>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav" aria-label="Main Navigation">
+          <ul class="nav-links">
+            <li><a href="/" class="nav-link" data-i18n="nav.home"></a></li>
+            <li><a href="/report" class="nav-link active" data-i18n="nav.report"></a></li>
+            <li><a href="/track" class="nav-link" data-i18n="nav.track"></a></li>
+            <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+            <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+          </ul>
+        </nav>
+
+        <!-- Actions (End: Hamburger Button + Fixed Compact Language Switcher) -->
+        <div class="header-end-actions">
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+            <span class="hamburger-bar"></span>
+          </button>
+          <div class="lang-switcher-wrapper">
+            <select class="lang-switcher-select" data-i18n-aria="nav.change_language" aria-label="Select Language"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Mobile Navigation Drawer -->
+      <nav class="mobile-nav" id="mobileNav" aria-label="Mobile Navigation">
+        <ul class="mobile-nav-links">
+          <li><a href="/" class="nav-link" data-i18n="nav.home"></a></li>
+          <li><a href="/report" class="nav-link active" data-i18n="nav.report"></a></li>
+          <li><a href="/track" class="nav-link" data-i18n="nav.track"></a></li>
+          <li><a href="/issues" class="nav-link" data-i18n="nav.issues"></a></li>
+          <li><a href="/admin" class="nav-link admin-link" data-i18n="nav.admin"></a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <div class="form-card" id="formCard">
+        <!-- Form Header -->
+        <div class="page-header" id="pageHeader">
+          <h1 class="page-title" data-i18n="report.page_title"></h1>
+          <p class="page-subtitle" data-i18n="report.page_subtitle"></p>
+        </div>
+
+        <!-- Alert Notification Box -->
+        <div id="alertBox" class="alert" style="display: none;"></div>
+
+        <!-- Submission Form -->
+        <form id="reportForm" novalidate>
+          <!-- 1. Title -->
+          <div class="form-group">
+            <label for="title" class="form-label" data-i18n="report.title_label"></label>
+            <input type="text" id="title" name="title" class="form-control" required
+              data-i18n-placeholder="report.title_placeholder" autocomplete="off">
+          </div>
+
+          <!-- 2. Category (Optional dropdown, default: Let AI decide) -->
+          <div class="form-group">
+            <label for="category" class="form-label" data-i18n="report.category_label"></label>
+            <select id="category" name="category" class="form-control">
+              <option value="" data-i18n="report.category_select_prompt"></option>
+              <option value="pothole" data-i18n="categories.pothole"></option>
+              <option value="garbage" data-i18n="categories.garbage"></option>
+              <option value="streetlight" data-i18n="categories.streetlight"></option>
+              <option value="water_leakage" data-i18n="categories.water_leakage"></option>
+              <option value="road_damage" data-i18n="categories.road_damage"></option>
+              <option value="drainage" data-i18n="categories.drainage"></option>
+              <option value="other" data-i18n="categories.other"></option>
+            </select>
+          </div>
+
+          <!-- 3. Description -->
+          <div class="form-group">
+            <label for="description" class="form-label" data-i18n="report.desc_label"></label>
+            <textarea id="description" name="description" class="form-control" rows="4" required
+              data-i18n-placeholder="report.desc_placeholder"></textarea>
+          </div>
+
+          <!-- 4. Location + Current Location GPS Button -->
+          <div class="form-group">
+            <label for="location" class="form-label" data-i18n="report.location_label"></label>
+            <div class="input-with-button">
+              <input type="text" id="location" name="location" class="form-control" required
+                data-i18n-placeholder="report.location_placeholder">
+              <button type="button" id="btnGps" class="btn btn-outline" style="white-space: nowrap;">
+                <span id="gpsBtnText" data-i18n="report.btn_gps"></span>
+              </button>
+            </div>
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+          </div>
+
+          <!-- 5. Optional Photo with Client-Side 1024px Canvas Resize -->
+          <div class="form-group">
+            <label class="form-label" data-i18n="report.photo_label"></label>
+            <div class="photo-upload-box" id="dropZone">
+              <input type="file" id="photoInput" accept="image/*" style="display: none;">
+              <button type="button" class="btn btn-outline" id="btnChoosePhoto">
+                <span data-i18n="report.photo_label"></span>
+              </button>
+              <p class="form-hint" id="photoStatusText" data-i18n="report.photo_help"></p>
+              
+              <div id="photoPreviewContainer" class="photo-preview-container" style="display: none;">
+                <img id="photoPreview" class="photo-preview" alt="Preview">
+                <button type="button" id="btnRemovePhoto" class="btn-remove-photo">&times; Remove Photo</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div style="margin-top: 24px;">
+            <button type="submit" id="btnSubmit" class="btn btn-primary btn-block">
+              <span id="submitBtnText" data-i18n="report.btn_submit"></span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Success Confirmation Card (Shown after successful submission) -->
+        <div id="successCard" class="success-banner" style="display: none;">
+          <div class="success-icon">&#10003;</div>
+          <h2 class="page-title" data-i18n="report.success_title"></h2>
+          <p class="page-subtitle" data-i18n="report.success_desc"></p>
+
+          <!-- Tracking ID Box -->
+          <div class="tracking-id-box">
+            <span class="form-label" style="margin-bottom: 0;" data-i18n="report.tracking_id_label"></span>
+            <span id="createdTrackingId" class="tracking-code-text">CR-XXXXXX</span>
+            <button type="button" id="btnCopyId" class="btn btn-outline btn-copy-id">
+              <span id="copyBtnText" data-i18n="report.btn_copy"></span>
+            </button>
+          </div>
+
+          <!-- Gemini AI Analysis Card -->
+          <div id="aiAnalysisCard" style="background-color: var(--white); border: 1.5px solid var(--slate-200); border-radius: var(--radius-md); padding: 18px; margin-block: 16px; text-align: left;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+              <strong style="font-size: 1rem; color: var(--slate-900);" data-i18n="report.ai_analysis_title"></strong>
+              <span id="aiPriorityBadge" class="badge"></span>
+            </div>
+
+            <!-- Manual Review Alert (if AI fallback was used) -->
+            <div id="manualReviewNotice" class="alert alert-info" style="display: none; margin-bottom: 12px;">
+              <span data-i18n="report.manual_review_notice"></span>
+            </div>
+
+            <!-- Category & Department Grid -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px;">
+              <div style="background-color: var(--slate-50); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--slate-200);">
+                <div style="font-size: 0.78rem; color: var(--slate-500); font-weight: 600;" data-i18n="report.assigned_category"></div>
+                <div id="aiCategoryText" style="font-weight: 700; color: var(--slate-900); font-size: 0.95rem;"></div>
+              </div>
+
+              <div style="background-color: var(--slate-50); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--slate-200);">
+                <div style="font-size: 0.78rem; color: var(--slate-500); font-weight: 600;" data-i18n="report.assigned_department"></div>
+                <div id="aiDepartmentText" style="font-weight: 700; color: var(--slate-900); font-size: 0.95rem;"></div>
+              </div>
+            </div>
+
+            <!-- Priority Reason -->
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 0.78rem; color: var(--slate-500); font-weight: 600;" data-i18n="report.priority_reason_label"></div>
+              <div id="aiPriorityReasonText" style="font-size: 0.92rem; color: var(--slate-700); line-height: 1.45; margin-top: 2px;"></div>
+            </div>
+
+            <!-- Citizen Message in Citizen's Own Language -->
+            <div id="citizenMessageWrap" style="background-color: var(--primary-light); border-inline-start: 4px solid var(--primary); padding: 12px; border-radius: var(--radius-sm);">
+              <div style="font-size: 0.78rem; color: var(--primary); font-weight: 700;" data-i18n="report.citizen_message_label"></div>
+              <div id="aiCitizenMessageText" style="font-size: 0.95rem; color: var(--slate-800); margin-top: 4px; line-height: 1.45;"></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="cta-group" style="margin-top: 20px; margin-bottom: 0;">
+            <a id="btnTrackNow" href="/track" class="btn btn-primary" data-i18n="report.btn_track_now"></a>
+            <button type="button" id="btnReportAnother" class="btn btn-outline" data-i18n="report.btn_report_another"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.about"></p>
+      <p data-i18n="footer.built_with"></p>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+  <script>
+    // State variables
+    let compressedPhotoDataUrl = null;
+
+    // DOM Elements
+    const reportForm = document.getElementById('reportForm');
+    const pageHeader = document.getElementById('pageHeader');
+    const alertBox = document.getElementById('alertBox');
+    const titleInput = document.getElementById('title');
+    const categorySelect = document.getElementById('category');
+    const descInput = document.getElementById('description');
+    const locationInput = document.getElementById('location');
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const btnGps = document.getElementById('btnGps');
+    const gpsBtnText = document.getElementById('gpsBtnText');
+    const photoInput = document.getElementById('photoInput');
+    const btnChoosePhoto = document.getElementById('btnChoosePhoto');
+    const dropZone = document.getElementById('dropZone');
+    const photoStatusText = document.getElementById('photoStatusText');
+    const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+    const photoPreview = document.getElementById('photoPreview');
+    const btnRemovePhoto = document.getElementById('btnRemovePhoto');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const submitBtnText = document.getElementById('submitBtnText');
+
+    // Success Screen Elements
+    const successCard = document.getElementById('successCard');
+    const createdTrackingId = document.getElementById('createdTrackingId');
+    const btnCopyId = document.getElementById('btnCopyId');
+    const copyBtnText = document.getElementById('copyBtnText');
+    const btnTrackNow = document.getElementById('btnTrackNow');
+    const btnReportAnother = document.getElementById('btnReportAnother');
+
+    const aiPriorityBadge = document.getElementById('aiPriorityBadge');
+    const aiCategoryText = document.getElementById('aiCategoryText');
+    const aiDepartmentText = document.getElementById('aiDepartmentText');
+    const aiPriorityReasonText = document.getElementById('aiPriorityReasonText');
+    const aiCitizenMessageText = document.getElementById('aiCitizenMessageText');
+    const manualReviewNotice = document.getElementById('manualReviewNotice');
+
+    function showAlert(msg, type = 'danger') {
+      alertBox.className = `alert alert-${type}`;
+      alertBox.textContent = msg;
+      alertBox.style.display = 'block';
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearAlert() {
+      alertBox.style.display = 'none';
+      alertBox.textContent = '';
+    }
+
+    // Photo Resizing
+    async function processImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        throw new Error('Please select an image file');
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.onload = () => {
+            const MAX_DIMENSION = 1024;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_DIMENSION) {
+                height = Math.round((height * MAX_DIMENSION) / width);
+                width = MAX_DIMENSION;
+              }
+            } else {
+              if (height > MAX_DIMENSION) {
+                width = Math.round((width * MAX_DIMENSION) / height);
+                height = MAX_DIMENSION;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.8;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+            while (dataUrl.length * 0.75 > 500 * 1024 && quality > 0.25) {
+              quality -= 0.1;
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            if (dataUrl.length * 0.75 > 600 * 1024) {
+              return reject(new Error(window.t('errors.photo_too_large')));
+            }
+
+            resolve(dataUrl);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    btnChoosePhoto.addEventListener('click', () => photoInput.click());
+    dropZone.addEventListener('click', (e) => {
+      if (e.target !== btnRemovePhoto && !btnRemovePhoto.contains(e.target)) {
+        photoInput.click();
+      }
+    });
+
+    photoInput.addEventListener('change', async () => {
+      const file = photoInput.files[0];
+      if (!file) return;
+
+      clearAlert();
+      btnChoosePhoto.disabled = true;
+      photoStatusText.textContent = window.t('report.photo_compressing');
+
+      try {
+        compressedPhotoDataUrl = await processImageFile(file);
+        photoPreview.src = compressedPhotoDataUrl;
+        photoPreviewContainer.style.display = 'block';
+        photoStatusText.textContent = `${(file.name || 'Photo')} (${Math.round((compressedPhotoDataUrl.length * 0.75) / 1024)} KB)`;
+      } catch (err) {
+        compressedPhotoDataUrl = null;
+        photoPreviewContainer.style.display = 'none';
+        showAlert(err.message || window.t('errors.photo_too_large'));
+        photoStatusText.textContent = window.t('report.photo_help');
+      } finally {
+        btnChoosePhoto.disabled = false;
+      }
+    });
+
+    btnRemovePhoto.addEventListener('click', (e) => {
+      e.stopPropagation();
+      photoInput.value = '';
+      compressedPhotoDataUrl = null;
+      photoPreview.src = '';
+      photoPreviewContainer.style.display = 'none';
+      photoStatusText.textContent = window.t('report.photo_help');
+    });
+
+    // Geolocation
+    btnGps.addEventListener('click', () => {
+      clearAlert();
+      if (!navigator.geolocation) {
+        showAlert(window.t('errors.gps_failed'));
+        locationInput.focus();
+        return;
+      }
+
+      btnGps.disabled = true;
+      const originalText = gpsBtnText.textContent;
+      gpsBtnText.textContent = window.t('report.gps_fetching');
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btnGps.disabled = false;
+          gpsBtnText.textContent = originalText;
+          latInput.value = pos.coords.latitude;
+          lngInput.value = pos.coords.longitude;
+          if (!locationInput.value || locationInput.value.startsWith('GPS:')) {
+            locationInput.value = `GPS: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+          }
+        },
+        (err) => {
+          btnGps.disabled = false;
+          gpsBtnText.textContent = originalText;
+          const msg = (err.code === err.PERMISSION_DENIED)
+            ? window.t('errors.gps_denied')
+            : window.t('errors.gps_failed');
+          showAlert(msg);
+          locationInput.focus();
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    });
+
+    // Form Submission
+    reportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const title = titleInput.value.trim();
+      const description = descInput.value.trim();
+      const location = locationInput.value.trim();
+      const category = categorySelect.value;
+      const latitude = latInput.value ? parseFloat(latInput.value) : null;
+      const longitude = lngInput.value ? parseFloat(lngInput.value) : null;
+
+      if (!title) {
+        showAlert(window.t('errors.title_required'));
+        titleInput.focus();
+        return;
+      }
+      if (!description) {
+        showAlert(window.t('errors.desc_required'));
+        descInput.focus();
+        return;
+      }
+      if (!location) {
+        showAlert(window.t('errors.location_required'));
+        locationInput.focus();
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      submitBtnText.textContent = window.t('report.btn_submitting');
+
+      try {
+        const payload = {
+          title,
+          description,
+          location,
+          category: category || null,
+          language: document.documentElement.lang || 'en',
+          latitude,
+          longitude,
+          image: compressedPhotoDataUrl
+        };
+
+        const res = await fetch('/api/complaints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || window.t('errors.network_error'));
+        }
+
+        // Populate Success Card with Gemini AI Triage Results
+        const ai = data.ai_analysis || {};
+        createdTrackingId.textContent = data.tracking_id;
+        btnTrackNow.href = `/track?id=${encodeURIComponent(data.tracking_id)}`;
+
+        // Priority Badge
+        const priority = ai.priority || 'Medium';
+        aiPriorityBadge.textContent = window.t(`priorities.${priority}`) || priority;
+        aiPriorityBadge.className = 'badge';
+        if (priority === 'Critical') {
+          aiPriorityBadge.classList.add('badge-priority-critical');
+        } else if (priority === 'High') {
+          aiPriorityBadge.classList.add('badge-priority-high');
+        } else if (priority === 'Low') {
+          aiPriorityBadge.classList.add('badge-priority-low');
+        } else {
+          aiPriorityBadge.classList.add('badge-priority-medium');
+        }
+
+        // Category & Department
+        const cat = ai.category || 'other';
+        aiCategoryText.textContent = window.t(`categories.${cat}`) || cat;
+
+        const dept = ai.department || 'General';
+        aiDepartmentText.textContent = window.t(`departments.${dept}`) || dept;
+
+        // Reason & Citizen Message
+        aiPriorityReasonText.textContent = ai.priority_reason || 'Recorded for municipal resolution.';
+        aiCitizenMessageText.textContent = ai.citizen_message || 'Your complaint has been successfully recorded.';
+
+        // Manual Review Notice
+        if (ai.needs_review) {
+          manualReviewNotice.style.display = 'block';
+        } else {
+          manualReviewNotice.style.display = 'none';
+        }
+
+        reportForm.style.display = 'none';
+        pageHeader.style.display = 'none';
+        successCard.style.display = 'block';
+        successCard.scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        showAlert(err.message || window.t('errors.network_error'));
+        btnSubmit.disabled = false;
+        submitBtnText.textContent = window.t('report.btn_submit');
+      }
+    });
+
+    // Copy Tracking ID
+    btnCopyId.addEventListener('click', async () => {
+      const code = createdTrackingId.textContent;
+      try {
+        await navigator.clipboard.writeText(code);
+        copyBtnText.textContent = window.t('report.copied');
+        setTimeout(() => {
+          copyBtnText.textContent = window.t('report.btn_copy');
+        }, 2000);
+      } catch (e) {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        copyBtnText.textContent = window.t('report.copied');
+        setTimeout(() => {
+          copyBtnText.textContent = window.t('report.btn_copy');
+        }, 2000);
+      }
+    });
+
+    // Reset and report another issue
+    btnReportAnother.addEventListener('click', () => {
+      reportForm.reset();
+      compressedPhotoDataUrl = null;
+      photoPreview.src = '';
+      photoPreviewContainer.style.display = 'none';
+      photoStatusText.textContent = window.t('report.photo_help');
+      clearAlert();
+
+      btnSubmit.disabled = false;
+      submitBtnText.textContent = window.t('report.btn_submit');
+      successCard.style.display = 'none';
+      pageHeader.style.display = 'block';
+      reportForm.style.display = 'block';
+      titleInput.focus();
+    });
+  </script>
+</body>
+</html>

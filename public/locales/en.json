@@ -1,0 +1,136 @@
+{
+  "lang_name": "English",
+  "app_name": "CivicResolve",
+  "app_tagline": "AI-Powered Civic Issue Platform",
+  "nav": {
+    "home": "Home",
+    "report": "Report a Problem",
+    "track": "Track a Complaint",
+    "issues": "Public Issues",
+    "admin": "Admin",
+    "change_language": "Change Language"
+  },
+  "home": {
+    "hero_title": "Empowering Citizens, Fixing Communities Together",
+    "hero_subtitle": "Report civic problems like potholes, garbage piles, broken lights, and water leaks directly to the right municipal authority using AI.",
+    "cta_report": "Report an Issue",
+    "cta_track": "Track Status",
+    "cta_browse": "View Public Issues",
+    "features_title": "How CivicResolve Works",
+    "step1_title": "1. Snap & Report",
+    "step1_desc": "Provide details, location, and an optional photo in your own language. No login required.",
+    "step2_title": "2. AI Analysis & Routing",
+    "step2_desc": "Google Gemini categorizes the issue, determines urgency, and routes it directly to the responsible municipal department.",
+    "step3_title": "3. Transparent Resolution",
+    "step3_desc": "Follow public issue progress from submission to resolution in real time."
+  },
+  "report": {
+    "page_title": "Report a Civic Problem",
+    "page_subtitle": "Easy and fast. No account or password needed.",
+    "title_label": "Title of the Issue",
+    "title_placeholder": "e.g., Large pothole near the bus stop",
+    "category_label": "Category (Optional - AI will verify)",
+    "category_select_prompt": "Let AI decide",
+    "desc_label": "Detailed Description",
+    "desc_placeholder": "Describe what is happening, exact location hints, or safety concerns...",
+    "location_label": "Location / Address",
+    "location_placeholder": "Street, landmark, or neighborhood name",
+    "btn_gps": "Use Current Location",
+    "gps_fetching": "Locating...",
+    "photo_label": "Add a Photo (Optional)",
+    "photo_help": "Photos are automatically compressed to ensure fast upload.",
+    "btn_submit": "Submit Complaint",
+    "btn_submitting": "Analyzing and Submitting...",
+    "success_title": "Complaint Submitted Successfully!",
+    "success_desc": "Your issue has been recorded and analyzed by AI.",
+    "tracking_id_label": "Your Tracking ID:",
+    "btn_copy": "Copy ID",
+    "copied": "Copied!",
+    "btn_track_now": "Track My Complaint",
+    "btn_report_another": "Report Another Problem",
+    "photo_compressing": "Compressing photo...",
+    "ai_analysis_title": "AI Triage & Routing Analysis",
+    "assigned_category": "Identified Category",
+    "assigned_priority": "Urgency Priority",
+    "assigned_department": "Routed Department",
+    "priority_reason_label": "Urgency & Public Impact",
+    "citizen_message_label": "Message For You",
+    "manual_review_notice": "Notice: Automated AI classification was temporarily unavailable; your issue is safely recorded and queued for priority manual review by municipal staff."
+  },
+  "track": {
+    "page_title": "Track a Complaint",
+    "page_subtitle": "Check the real-time resolution progress of any submitted civic issue.",
+    "input_label": "Enter Tracking ID",
+    "input_placeholder": "e.g., CR-7K9A2X",
+    "btn_search": "Track Complaint",
+    "searching": "Searching...",
+    "not_found": "No complaint was found matching this tracking ID. Please verify and try again.",
+    "timeline_title": "Resolution Timeline",
+    "details_title": "Issue Summary",
+    "assigned_dept": "Assigned Department",
+    "priority_level": "Priority Level",
+    "citizen_note_title": "Official Update for You",
+    "admin_notes_title": "Authority Actions & Notes"
+  },
+  "issues": {
+    "page_title": "Public Civic Issues",
+    "page_subtitle": "View public reports and follow municipal resolution progress across the city.",
+    "filter_all": "All",
+    "filter_category": "Filter by Category",
+    "filter_status": "Filter by Status",
+    "filter_priority": "Filter by Priority",
+    "search_placeholder": "Search by neighborhood, street or keyword...",
+    "no_issues": "No complaints found matching the selected criteria.",
+    "tracking_id": "ID",
+    "reported_on": "Reported",
+    "location": "Location"
+  },
+  "admin": {
+    "page_title": "Admin Dashboard",
+    "page_subtitle": "Municipal Authority Management Portal",
+    "placeholder_title": "Authority Portal - Coming in Upcoming Stage",
+    "placeholder_desc": "The admin authentication, issue triaging, priority overrides, and resolution status management will be activated in the upcoming stage.",
+    "btn_back_home": "Back to Home"
+  },
+  "categories": {
+    "pothole": "Pothole",
+    "garbage": "Garbage & Waste",
+    "streetlight": "Streetlight / Electrical",
+    "water_leakage": "Water Leakage",
+    "road_damage": "Road Damage",
+    "drainage": "Drainage & Sewage",
+    "other": "Other"
+  },
+  "departments": {
+    "Roads": "Roads & Highways",
+    "Sanitation": "Sanitation & Solid Waste",
+    "Electricity": "Electricity & Power",
+    "Water Supply": "Water Supply",
+    "Drainage": "Drainage & Sewerage",
+    "General": "General Administration"
+  },
+  "statuses": {
+    "Reported": "Reported",
+    "In Progress": "In Progress",
+    "Resolved": "Resolved"
+  },
+  "priorities": {
+    "Critical": "Critical",
+    "High": "High",
+    "Medium": "Medium",
+    "Low": "Low"
+  },
+  "errors": {
+    "title_required": "Please enter an issue title.",
+    "desc_required": "Please provide a description of the issue.",
+    "location_required": "Please specify the location or landmark.",
+    "gps_failed": "Unable to retrieve your location. Please enter it manually.",
+    "network_error": "Connection issue. Please check your internet connection and try again.",
+    "gps_denied": "Location permission was denied. Please type your address manually.",
+    "photo_too_large": "Image could not be compressed under 500 KB. Please select a smaller photo."
+  },
+  "footer": {
+    "about": "CivicResolve is an open public civic issue management initiative.",
+    "built_with": "Built with Node.js, PostgreSQL, and Google Gemini AI."
+  }
+}
